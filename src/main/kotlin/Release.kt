@@ -274,7 +274,7 @@ class Git(
                     |
                     |Jira: [$ticket](https://ellation.atlassian.net/browse/$ticket)
                     |
-                    |This PR was created automatically.""".trimMargin()
+                    |This PR was created [automatically](https://github.com/crunchyroll/android-library-release-script).""".trimMargin()
         ).execute()
     }
 }
