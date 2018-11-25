@@ -53,9 +53,11 @@ class GitTest {
         )
     }
 
-    fun String.output(repo: File): String = execuute(repo).inputStream.bufferedReader().use { it.readText() }.trim()
+    fun String.output(repo: File): String {
+        return execute(repo).inputStream.bufferedReader().use { it.readText() }.trim()
+    }
 
-    fun String.execuute(workingDir: File = File(".")): Process {
+    fun String.execute(workingDir: File = File(".")): Process {
         return split(" ").execute(workingDir)
     }
 
