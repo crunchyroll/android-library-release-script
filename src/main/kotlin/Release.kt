@@ -134,9 +134,9 @@ class Preconditions(private val workingDir: String) {
     private val preconditions: List<Pair<String, () -> Boolean>> = listOf(
         "Cannot locate gradlew executable"
                 to { File(workingDir, "gradlew").exists() },
-        "hub is not installed, run brew install hub"
+        "hub is not installed, run 'brew install hub'"
                 to { "hub --version".execute().exitValue() == 0 },
-        "mvn is not installed, run brew install maven"
+        "mvn is not installed, run 'brew install maven'"
                 to { "mvn --version".execute().exitValue() == 0 }
     )
 
