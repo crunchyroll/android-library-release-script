@@ -19,4 +19,17 @@ class StepsTest {
             step("step #3") { fail("This step shouldn't be executed") }
         }
     }
+
+    @Test
+    fun `doesn't rethrow NonFatalException`() {
+        try {
+            steps {
+                step("step #1") {}
+                step("step #2") { throw NonFatalException() }
+                step("step #3") {}
+            }
+        } catch (t: NonFatalException) {
+            fail("NonFatalException should be rethrown")
+        }
+    }
 }

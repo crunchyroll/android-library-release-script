@@ -299,7 +299,7 @@ class Git(
     }
 }
 
-class NonFatalException(message: String, cause: Throwable? = null) :
+class NonFatalException(message: String? = "", cause: Throwable? = null) :
     RuntimeException(message, cause)
 
 fun String.execute(workingDir: File = File(".")): Process? {

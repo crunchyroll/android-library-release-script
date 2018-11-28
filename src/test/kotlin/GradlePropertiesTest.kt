@@ -54,6 +54,20 @@ class GradlePropertiesTest {
         )
     }
 
+    @Test(expected = IllegalArgumentException::class)
+    fun `throws if there's no VERSION_NAME property`() {
+        val file = tempFolder.newFile("gradle.properties").apply {
+            writeText(
+                """
+                |GROUP=com.ellation
+                |ARTIFACT_ID=some-library
+                """.trimMargin()
+            )
+        }
+
+        GradleProperties(path = file.path, versionNameKey = "VERSION_NAME")
+    }
+
     private fun createGradleProperties(initialVersion: String): GradleProperties {
         val file = tempFolder.newFile("gradle.properties").apply {
             writeText(
