@@ -23,14 +23,14 @@ Also, the project that you want to run the script on should have:
 ```bash
 $ kscript https://github.com/crunchyroll/android-library-release-script/blob/master/src/main/kotlin/Release.kt --help
 
-usage: [-h] [-t TICKET] [--changelog CHANGELOG] [--tag-prefix TAG_PREFIX]
+usage: [-h] [--ticket TICKET] [--changelog CHANGELOG] [--tag-prefix TAG_PREFIX]
        [--no-tag-prefix]
 
 optional arguments:
   -h, --help                show this help message and exit
 
-  -t TICKET,                Ticket number to use when creating the version
-  --ticket TICKET           bump PR
+  --ticket TICKET           Ticket number to use when creating the version
+                            bump PR
 
   --changelog CHANGELOG     Changelog file to modify
 

@@ -95,7 +95,7 @@ class CliConfig(parser: ArgParser) {
     }
 
     val ticket by parser.storing(
-        "-t", "--ticket",
+        "--ticket",
         help = "Ticket number to use when creating the version bump PR"
     ).default("GUNDROID-88")
 
