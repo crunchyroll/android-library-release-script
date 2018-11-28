@@ -9,13 +9,13 @@ import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+var DRY_RUN = false
+
 fun main(args: Array<String>) = steps {
     val config = CliConfig.parse(args)
     println("ticket = ${config.ticket}")
 
-    val gradleProperties = GradleProperties(path = ".", versionNameKey = "VERSION_NAME")
-    val releaseDate: String = today()
-    println("Releasing version ${gradleProperties.versionToRelease} on $releaseDate")
+    DRY_RUN = config.dryRun
 
     step("Upload artifact") {
         val gradle = GradleW()
@@ -25,6 +25,7 @@ fun main(args: Array<String>) = steps {
     val tagPrefix = if (config.noTagPrefix) "" else config.tagPrefix
     val git = Git(tagPrefix = tagPrefix)
 
+    val gradleProperties = GradleProperties(path = ".", versionNameKey = "VERSION_NAME")
     step("Create and push release tag") {
         git.createReleaseTag(gradleProperties.versionToRelease)
     }
@@ -36,7 +37,7 @@ fun main(args: Array<String>) = steps {
     val changelog = Changelog(path = ".", filename = config.changelog)
 
     step("Update release date in changelog") {
-        changelog.setReleaseDate(gradleProperties.versionToRelease, releaseDate)
+        changelog.setReleaseDate(gradleProperties.versionToRelease, today())
     }
     step("Add new version to changelog") {
         changelog.addNewVersion(gradleProperties.newVersion)
@@ -66,18 +67,25 @@ class Steps {
 
     fun run() {
         var theFailure: Throwable? = null
-        for (step in steps) {
+        for ((index, step) in steps.withIndex()) {
             try {
+                println()
+                println(">> Running step #$index '${step.description}'")
                 step.action()
                 step.success = true
             } catch (t: Throwable) {
-                theFailure = t
-                break
+                if (t is NonFatalException) {
+                    println("Non-fatal exception: ${t.message}")
+                } else {
+                    theFailure = t
+                    break
+                }
             }
         }
 
-        steps.forEach { step ->
-            println("${if (step.success) "✔" else "✘"} ${step.description}")
+        println()
+        steps.forEachIndexed { index, step ->
+            println("#$index ${if (step.success) " OK" else "NOK"} ${step.description}")
         }
         theFailure?.let { throw it }
     }
@@ -94,9 +102,16 @@ class CliConfig(parser: ArgParser) {
         }
     }
 
+    val dryRun by parser.flagging(
+        "--dry-run",
+        help = "Run the script with all command line actions disabled (e.g 'git', 'hub', 'gradlew'). " +
+                "Local files will still be modified (e.g 'gradle.properties', 'CHANGELOG.md'). " +
+                "Use this to understand which actions would have been executed."
+    )
+
     val ticket by parser.storing(
         "--ticket",
-        help = "Ticket number to use when creating the version bump PR"
+        help = "Ticket number to use when creating the version bump PR. Default is GUNDROID-88."
     ).default("GUNDROID-88")
 
     val changelog by parser.storing(
@@ -135,9 +150,9 @@ class Preconditions(private val workingDir: String) {
         "Cannot locate gradlew executable"
                 to { File(workingDir, "gradlew").exists() },
         "hub is not installed, run 'brew install hub'"
-                to { "hub --version".execute().exitValue() == 0 },
+                to { "hub --version".execute()?.exitValue() == 0 },
         "mvn is not installed, run 'brew install maven'"
-                to { "mvn --version".execute().exitValue() == 0 }
+                to { "mvn --version".execute()?.exitValue() == 0 }
     )
 
     fun verify() {
@@ -154,12 +169,15 @@ class Changelog(
     val file = findChangelogFile()
 
     fun setReleaseDate(version: String, date: String) {
-        fun String.withToday(): String = replace("In development", date)
+        file ?: throw NonFatalException("Could not find '$filename' changelog file")
 
-        file?.replaceLines { lines ->
+        file.replaceLines { lines ->
             lines.map { line ->
                 when {
-                    line.contains("$version *(In development)*") -> line.withToday()
+                    line.contains("$version *(In development)*") ->
+                        line.replace("In development", date).also {
+                            println("Set date $date for version $version in $filename changelog file")
+                        }
                     else -> line
                 }
             }
@@ -167,13 +185,15 @@ class Changelog(
     }
 
     fun addNewVersion(version: String) {
-        file?.replaceLines { lines ->
+        file ?: throw NonFatalException("Could not find $filename")
+        file.replaceLines { lines ->
             lines.toMutableList().apply {
                 add(2, "")
                 add(2, "## Version $version *(In development)*")
                 add(2, "")
             }
         }
+        println("Added version $version to $filename changelog file")
     }
 
     private fun findChangelogFile(): File? = File(path)
@@ -197,7 +217,7 @@ class GradleProperties(
     val newVersion: String = versionToRelease.increment()
 
     fun incrementVersion() {
-        println("New version will be $newVersion")
+        println("Set version to $newVersion")
         writeVersion(newVersion)
     }
 
@@ -279,12 +299,18 @@ class Git(
     }
 }
 
-fun String.execute(workingDir: File = File(".")): Process {
+class NonFatalException(message: String, cause: Throwable? = null) :
+    RuntimeException(message, cause)
+
+fun String.execute(workingDir: File = File(".")): Process? {
     return split(" ").execute(workingDir)
 }
 
-fun List<String>.execute(workingDir: File = File(".")): Process {
-    println("Running command: $this")
+fun List<String>.execute(workingDir: File = File(".")): Process? {
+    println("$ $this")
+    if (DRY_RUN) {
+        return null
+    }
     val process = ProcessBuilder(this)
         .directory(workingDir)
         .redirectInput(ProcessBuilder.Redirect.INHERIT)

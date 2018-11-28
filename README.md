@@ -23,14 +23,20 @@ Also, the project that you want to run the script on should have:
 ```bash
 $ kscript https://github.com/crunchyroll/android-library-release-script/blob/master/src/main/kotlin/Release.kt --help
 
-usage: [-h] [--ticket TICKET] [--changelog CHANGELOG] [--tag-prefix TAG_PREFIX]
-       [--no-tag-prefix]
+usage: [-h] [--dry-run] [--ticket TICKET] [--changelog CHANGELOG]
+       [--tag-prefix TAG_PREFIX] [--no-tag-prefix]
 
 optional arguments:
   -h, --help                show this help message and exit
 
+  --dry-run                 Run the script with all command line actions
+                            disabled (e.g 'git', 'hub', 'gradlew'). Local
+                            files will still be modified (e.g
+                            'gradle.properties', 'CHANGELOG.md'). Use this to
+                            understand which actions would have been executed.
+
   --ticket TICKET           Ticket number to use when creating the version
-                            bump PR
+                            bump PR. Default is GUNDROID-88.
 
   --changelog CHANGELOG     Changelog file to modify
 
