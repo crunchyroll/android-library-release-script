@@ -58,4 +58,18 @@ class ChangelogTest {
             changelog.file?.readText()?.trim()
         )
     }
+
+    @Test(expected = NonFatalException::class)
+    fun `throws NonFatalException when setting release date if changelog file cannot be found`() {
+        val changelog = Changelog(path = tempFolder.toString(), filename = "changelog.md")
+
+        changelog.setReleaseDate(version = "1.1.16", date = "2020-04-20")
+    }
+
+    @Test(expected = NonFatalException::class)
+    fun `throws NonFatalException when adding new version if changelog file cannot be found`() {
+        val changelog = Changelog(path = tempFolder.toString(), filename = "changelog.md")
+
+        changelog.addNewVersion(version = "1.1.17")
+    }
 }
