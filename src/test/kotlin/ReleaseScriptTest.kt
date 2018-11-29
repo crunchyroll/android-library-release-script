@@ -14,13 +14,16 @@ class ReleaseScriptTest {
 
     @Test
     fun `script is runnable in --dry-run mode`() {
-        fakeProject.newFile("gradle.properties").writeText(
-            """
+        val a = fakeProject.newFile("gradle.properties").apply {
+            writeText(
+                """
             VERSION_NAME=1.0.1
             """.trimIndent()
-        )
-        fakeProject.newFile("CHANGELOG.md").writeText(
-            """
+            )
+        }
+        val b = fakeProject.newFile("CHANGELOG.md").apply {
+            writeText(
+                """
             # Changelog
 
             ## Version 1.0.1 *(In development)*
@@ -31,9 +34,13 @@ class ReleaseScriptTest {
 
             - Fake changelog entry
             """.trimIndent()
-        )
+            )
+        }
         fakeProject.newFile("gradlew")
         runScript("--dry-run")
+
+        println(a.readText())
+        println(b.readText())
     }
 
     fun runScript(vararg args: String) {

@@ -104,8 +104,7 @@ class CliConfig(parser: ArgParser) {
 
     val dryRun by parser.flagging(
         "--dry-run",
-        help = "Run the script with all command line actions disabled (e.g 'git', 'hub', 'gradlew'). " +
-                "Local files will still be modified (e.g 'gradle.properties', 'CHANGELOG.md'). " +
+        help = "Run the script with all actions disabled. " +
                 "Use this to understand which actions would have been executed."
     )
 
@@ -196,9 +195,7 @@ class Changelog(
         println("Added version $version to $filename changelog file")
     }
 
-    private fun findChangelogFile(): File? = File(path)
-        .walkTopDown()
-        .find { file -> file.name.equals(filename, ignoreCase = true) }
+    private fun findChangelogFile(): File? = findFile(workingDir = path, filename = filename)
 }
 
 class GradleProperties(
@@ -232,10 +229,11 @@ class GradleProperties(
         }
     }
 
-    private fun findGradlePropertiesFile(): File? = File(path)
-        .walkTopDown()
-        .filter { file -> file.name == "gradle.properties" }
-        .find { file -> file.readText().contains(versionNameKey) }
+    private fun findGradlePropertiesFile(): File? {
+        return findFile(workingDir = path, filename = "gradle.properties") {
+            it.readText().contains(versionNameKey)
+        }
+    }
 
     private fun String.increment(): String {
         val delimiter = "."
@@ -301,6 +299,23 @@ class Git(
 
 class NonFatalException(message: String? = "", cause: Throwable? = null) :
     RuntimeException(message, cause)
+
+fun findFile(
+    workingDir: String = ".",
+    filename: String,
+    predicate: (File) -> Boolean = { true }
+): File? {
+    val realFile = File(workingDir)
+        .walkTopDown()
+        .filter { file -> file.name.equals(filename, ignoreCase = true) }
+        .find(predicate)
+    return if (DRY_RUN) realFile?.createTempCopy() else realFile
+}
+
+private fun File.createTempCopy(): File = File.createTempFile("ALRS", null).also { temp ->
+    temp.writeBytes(this.readBytes())
+    temp.deleteOnExit()
+}
 
 fun String.execute(workingDir: File = File(".")): Process? {
     return split(" ").execute(workingDir)
