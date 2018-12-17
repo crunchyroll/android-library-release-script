@@ -29,7 +29,7 @@ class StepsTest {
                 step("step #3") {}
             }
         } catch (t: NonFatalException) {
-            fail("NonFatalException should be rethrown")
+            fail("NonFatalException should not be rethrown")
         }
     }
 }
