@@ -28,7 +28,6 @@ class ReleaseScriptTest {
         gradleProperties.writeText(gradlePropertiesContent)
         val changelog = script.newFile("CHANGELOG.md")
         changelog.writeText(changelogContent)
-        script.newFile("gradlew")
 
         script.run("--dry-run")
 
