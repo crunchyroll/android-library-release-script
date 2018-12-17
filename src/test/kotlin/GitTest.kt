@@ -4,7 +4,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
-import java.util.concurrent.TimeUnit
 
 class GitTest {
     @get:Rule
@@ -51,26 +50,5 @@ class GitTest {
             "2.0.0",
             "git tag".output(remoteRepository)
         )
-    }
-
-    fun String.output(repo: File): String {
-        return execute(repo).inputStream.bufferedReader().use { it.readText() }.trim()
-    }
-
-    fun String.execute(workingDir: File = File(".")): Process {
-        return split(" ").execute(workingDir)
-    }
-
-    fun List<String>.execute(workingDir: File = File(".")): Process {
-        println("Running command: $this")
-        val process = ProcessBuilder(this)
-            .directory(workingDir)
-            .start()
-        process.waitFor(60, TimeUnit.SECONDS)
-        val exitValue = process.exitValue()
-        if (exitValue != 0) {
-            throw IllegalStateException("Command $this has exited with non-zero value $exitValue.")
-        }
-        return process
     }
 }
