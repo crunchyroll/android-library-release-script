@@ -1,0 +1,20 @@
+plugins {
+    id "org.jetbrains.kotlin.jvm" version "1.3.0"
+}
+
+repositories {
+    mavenLocal()
+    jcenter()
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib"
+    compile "org.jetbrains.kotlin:kotlin-script-runtime"
+    compile "com.xenomachina:kotlin-argparser:2.0.7"
+    compile "com.github.holgerbrandl:kscript-annotations:1.2"
+    
+    testCompile "junit:junit:4.12"
+}
+
+sourceSets.main.java.srcDirs 'src/main/kotlin'
+sourceSets.test.java.srcDirs 'src/test/kotlin'
