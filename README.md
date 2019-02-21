@@ -23,7 +23,7 @@ Also, the project that you want to run the script on should have:
 In order for the script to work, you have to run it inside the project you want to release.
 
 ```bash
-$ kscript https://github.com/crunchyroll/android-library-release-script/blob/master/src/main/kotlin/Release.kt --help
+$ kscript https://raw.githubusercontent.com/crunchyroll/android-library-release-script/master/src/main/kotlin/Release.kt --help
 
 usage: [-h] [--dry-run] [--ticket TICKET] [--changelog CHANGELOG]
        [--tag-prefix TAG_PREFIX] [--no-tag-prefix]
