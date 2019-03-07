@@ -45,7 +45,7 @@ optional arguments:
   --no-tag-prefix           Do not add any prefix to the version tag
 ```
 
-[![asciicast](https://asciinema.org/a/Kb2O1EuKK5CIZWlWuBsum4Zzq.svg)](https://asciinema.org/a/Kb2O1EuKK5CIZWlWuBsum4Zzq)
+![example gif](./art/example.gif)
 
 ## Development
 
