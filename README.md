@@ -45,10 +45,12 @@ optional arguments:
   --no-tag-prefix           Do not add any prefix to the version tag
 ```
 
-## Releasing
-
-The script itself doesn't have to be compiled to be released. Anyone can reference it directly from the `master` tree.
+[![asciicast](https://asciinema.org/a/Kb2O1EuKK5CIZWlWuBsum4Zzq.svg)](https://asciinema.org/a/Kb2O1EuKK5CIZWlWuBsum4Zzq)
 
 ## Development
 
 Run `./gradlew build` to compile the script and run all checks.
+
+## Deployment
+
+The script itself doesn't have to be deployed. Anyone can reference it directly from the `master` tree.
