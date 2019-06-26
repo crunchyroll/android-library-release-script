@@ -46,6 +46,7 @@ optional arguments:
 ```
 
 ![example gif](./art/example.gif)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fcrunchyroll%2Fandroid-library-release-script.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fcrunchyroll%2Fandroid-library-release-script?ref=badge_shield)
 
 ## Development
 
@@ -54,3 +55,7 @@ Run `./gradlew build` to compile the script and run all checks.
 ## Deployment
 
 The script itself doesn't have to be deployed. Anyone can reference it directly from the `master` tree.
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fcrunchyroll%2Fandroid-library-release-script.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fcrunchyroll%2Fandroid-library-release-script?ref=badge_large)
