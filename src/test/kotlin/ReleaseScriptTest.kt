@@ -28,7 +28,7 @@ class ReleaseScriptTest {
         val output = script.run("--help")
 
         assertTrue(output.contains("-h, --help"))
-        assertTrue(output.contains("show this help message and exit"))
+        assertTrue(output.contains("Show this message and exit"))
     }
 
     @Test
