@@ -1,56 +1,56 @@
 #!/usr/bin/env kscript
 
-@file:DependsOn("com.xenomachina:kotlin-argparser:2.0.7")
+@file:DependsOn("com.github.ajalt.clikt:clikt-jvm:3.3.0")
 
-import com.xenomachina.argparser.ArgParser
-import com.xenomachina.argparser.default
-import com.xenomachina.argparser.mainBody
+import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.parameters.options.*
 import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 var DRY_RUN = false
 
-fun main(args: Array<String>) = steps {
-    val config = CliConfig.parse(args)
-    println("ticket = ${config.ticket}")
+fun main(args: Array<String>) = ReleaseCommand { config ->
+    steps {
+        println("ticket = ${config.ticket}")
 
-    DRY_RUN = config.dryRun
+        DRY_RUN = config.dryRun
 
-    step("Upload artifact") {
-        val gradle = GradleW()
-        gradle.uploadArchives()
+        step("Upload artifact") {
+            val gradle = GradleW()
+            gradle.uploadArchives()
+        }
+
+        val tagPrefix = if (config.noTagPrefix) "" else config.tagPrefix
+        val git = Git(tagPrefix = tagPrefix)
+
+        val gradleProperties = GradleProperties(path = ".", versionNameKey = "VERSION_NAME")
+        step("Create and push release tag") {
+            git.createReleaseTag(gradleProperties.versionToRelease)
+        }
+
+        step("Increment version in gradle.properties") {
+            gradleProperties.incrementVersion()
+        }
+
+        val changelog = Changelog(path = ".", filename = config.changelog)
+
+        step("Update release date in changelog") {
+            changelog.setReleaseDate(gradleProperties.versionToRelease, today())
+        }
+        step("Add new version to changelog") {
+            changelog.addNewVersion(gradleProperties.newVersion)
+        }
+
+        step("Create commit and pull request") {
+            git.createPullRequestForNewVersion(
+                gradleProperties.newVersion,
+                config.ticket,
+                listOf(gradleProperties.file, changelog.file)
+            )
+        }
     }
-
-    val tagPrefix = if (config.noTagPrefix) "" else config.tagPrefix
-    val git = Git(tagPrefix = tagPrefix)
-
-    val gradleProperties = GradleProperties(path = ".", versionNameKey = "VERSION_NAME")
-    step("Create and push release tag") {
-        git.createReleaseTag(gradleProperties.versionToRelease)
-    }
-
-    step("Increment version in gradle.properties") {
-        gradleProperties.incrementVersion()
-    }
-
-    val changelog = Changelog(path = ".", filename = config.changelog)
-
-    step("Update release date in changelog") {
-        changelog.setReleaseDate(gradleProperties.versionToRelease, today())
-    }
-    step("Add new version to changelog") {
-        changelog.addNewVersion(gradleProperties.newVersion)
-    }
-
-    step("Create commit and pull request") {
-        git.createPullRequestForNewVersion(
-            gradleProperties.newVersion,
-            config.ticket,
-            listOf(gradleProperties.file, changelog.file)
-        )
-    }
-}
+}.main(args)
 
 fun steps(action: Steps.() -> Unit) {
     val steps = Steps()
@@ -95,33 +95,35 @@ class Steps {
     }
 }
 
-class CliConfig(parser: ArgParser) {
-    companion object {
-        fun parse(args: Array<String>) = mainBody {
-            ArgParser(args).parseInto(::CliConfig)
-        }
-    }
+interface Config {
+    val dryRun: Boolean
+    val ticket: String
+    val changelog: String
+    val tagPrefix: String
+    val noTagPrefix: Boolean
+}
 
-    val dryRun by parser.flagging(
+class ReleaseCommand(private val run: (config: Config) -> Unit) : CliktCommand(), Config {
+    override val dryRun by option(
         "--dry-run",
         help = "Run the script with all actions disabled. " +
                 "Use this to understand which actions would have been executed."
-    )
+    ).flag()
 
-    val ticket by parser.storing(
+    override val ticket by option(
         "--ticket",
         help = "Ticket number to use when creating the version bump PR. Default is GUNDROID-88."
     ).default("GUNDROID-88")
 
-    val changelog by parser.storing(
+    override val changelog by option(
         "--changelog",
         help = "Changelog file to modify"
     ).default("changelog.md")
 
-    val tagPrefix by parser.storing(
+    override val tagPrefix by option(
         "--tag-prefix",
         help = "Version prefix to use for tag creation"
-    ).default("v").addValidator {
+    ).default("v").validate {
         if (noTagPrefix) {
             throw IllegalArgumentException(
                 "The --tag-prefix and --no-tag-prefix can't be used together"
@@ -129,10 +131,12 @@ class CliConfig(parser: ArgParser) {
         }
     }
 
-    val noTagPrefix by parser.flagging(
+    override val noTagPrefix by option(
         "--no-tag-prefix",
         help = "Do not add any prefix to the version tag"
-    )
+    ).flag()
+
+    override fun run() = run(this)
 }
 
 fun today() = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
