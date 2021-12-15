@@ -46,7 +46,8 @@ fun main(args: Array<String>) = ReleaseCommand { config ->
             git.createPullRequestForNewVersion(
                 gradleProperties.newVersion,
                 config.ticket,
-                listOf(gradleProperties.file, changelog.file)
+                listOf(gradleProperties.file, changelog.file),
+                config.labels
             )
         }
     }
@@ -101,6 +102,7 @@ interface Config {
     val changelog: String
     val tagPrefix: String
     val noTagPrefix: Boolean
+    val labels: List<String>
 }
 
 class ReleaseCommand(private val run: (config: Config) -> Unit) : CliktCommand(), Config {
@@ -135,6 +137,11 @@ class ReleaseCommand(private val run: (config: Config) -> Unit) : CliktCommand()
         "--no-tag-prefix",
         help = "Do not add any prefix to the version tag"
     ).flag()
+
+    override val labels: List<String> by option(
+        "--labels",
+        help = "Labels to be added to the Version Bump Pull Request"
+    ).multiple()
 
     override fun run() = run(this)
 }
@@ -179,7 +186,9 @@ class Changelog(
                 when {
                     line.contains("$version *(In development)*") ->
                         line.replace("In development", date).also {
-                            println("Set date $date for version $version in $filename changelog file")
+                            println(
+                                "Set date $date for version $version in $filename changelog file"
+                            )
                         }
                     else -> line
                 }
@@ -267,13 +276,18 @@ class Git(
         "git push $remote $tag".execute(repo)
     }
 
-    fun createPullRequestForNewVersion(version: String, ticket: String, files: List<File?>) {
+    fun createPullRequestForNewVersion(
+        version: String,
+        ticket: String,
+        files: List<File?>,
+        labels: List<String>
+    ) {
         val name = "$ticket-increment-version-to-$version"
         "git checkout -b $name".execute()
         addFilesToIndex(files)
         createCommit(version, ticket)
         "git push origin $name".execute()
-        createPullRequest(version, ticket)
+        createPullRequest(version, ticket, labels)
         "git checkout master".execute()
     }
 
@@ -289,15 +303,20 @@ class Git(
         "git add ${files.filterNotNull().joinToString(separator = " ")}".execute()
     }
 
-    private fun createPullRequest(version: String, ticket: String) {
-        listOf(
+    private fun createPullRequest(version: String, ticket: String, labels: List<String>) {
+        mutableListOf(
             "hub", "pull-request",
             "-m", """Prepare next version $version
                     |
                     |Jira: [$ticket](https://ellation.atlassian.net/browse/$ticket)
                     |
                     |This PR was created [automatically](https://github.com/crunchyroll/android-library-release-script).""".trimMargin()
-        ).execute()
+        ).apply {
+            if (labels.isNotEmpty()) {
+                add("-l")
+                add(labels.joinToString(separator = " "))
+            }
+        }.execute()
     }
 }
 
