@@ -314,7 +314,7 @@ class Git(
         ).apply {
             if (labels.isNotEmpty()) {
                 add("-l")
-                add(labels.joinToString(separator = " "))
+                add(labels.joinToString(separator = ","))
             }
         }.execute()
     }
