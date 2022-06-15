@@ -16,7 +16,8 @@ Also, the project that you want to run the script on should have:
    - Version headings should start with `##`
 2. gradle.properties
    - Should contain a `VERSION_NAME` property (e.g `VERSION_NAME=1.0.0`)
-3. There should be an `uploadArchives` task in Gradle
+3. There should be an `uploadArchives` task in Gradle or you can use `--publish-task-name` parameter to pass your custom
+task name
 
 ## Usage
 
@@ -43,6 +44,10 @@ optional arguments:
   --tag-prefix TAG_PREFIX   Version prefix to use for tag creation
 
   --no-tag-prefix           Do not add any prefix to the version tag
+  
+  --labels                  Labels to be added to the Version Bump Pull Request
+  
+  --publish-task-name       Maven publish task name
 ```
 
 ![example gif](./art/example.gif)
