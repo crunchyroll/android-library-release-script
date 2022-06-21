@@ -17,8 +17,7 @@ fun main(args: Array<String>) = ReleaseCommand { config ->
         DRY_RUN = config.dryRun
 
         step("Upload artifact") {
-            val gradle = GradleW()
-            gradle.uploadArchives()
+            "./gradlew ${config.publishingTaskName}".execute()
         }
 
         val tagPrefix = if (config.noTagPrefix) "" else config.tagPrefix
@@ -103,13 +102,14 @@ interface Config {
     val tagPrefix: String
     val noTagPrefix: Boolean
     val labels: List<String>
+    val publishingTaskName: String
 }
 
 class ReleaseCommand(private val run: (config: Config) -> Unit) : CliktCommand(), Config {
     override val dryRun by option(
         "--dry-run",
         help = "Run the script with all actions disabled. " +
-                "Use this to understand which actions would have been executed."
+            "Use this to understand which actions would have been executed."
     ).flag()
 
     override val ticket by option(
@@ -143,6 +143,11 @@ class ReleaseCommand(private val run: (config: Config) -> Unit) : CliktCommand()
         help = "Labels to be added to the Version Bump Pull Request"
     ).multiple()
 
+    override val publishingTaskName by option(
+        "--publish-task-name",
+        help = "Maven publish task name"
+    ).default("uploadArchives")
+
     override fun run() = run(this)
 }
 
@@ -158,11 +163,11 @@ fun File.replaceLines(modifiedLines: (List<String>) -> List<String>) {
 class Preconditions(private val workingDir: String) {
     private val preconditions: List<Pair<String, () -> Boolean>> = listOf(
         "Cannot locate gradlew executable"
-                to { File(workingDir, "gradlew").exists() },
+            to { File(workingDir, "gradlew").exists() },
         "hub is not installed, run 'brew install hub'"
-                to { "hub --version".execute()?.exitValue() == 0 },
+            to { "hub --version".execute()?.exitValue() == 0 },
         "mvn is not installed, run 'brew install maven'"
-                to { "mvn --version".execute()?.exitValue() == 0 }
+            to { "mvn --version".execute()?.exitValue() == 0 }
     )
 
     fun verify() {
@@ -254,12 +259,6 @@ class GradleProperties(
         val oldPatch = split.last().toInt()
         val newPatch = oldPatch + 1
         return (split.dropLast(1) + newPatch).joinToString(separator = delimiter)
-    }
-}
-
-class GradleW {
-    fun uploadArchives() {
-        "./gradlew uploadArchives".execute()
     }
 }
 
