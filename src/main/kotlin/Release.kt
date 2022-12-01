@@ -286,7 +286,7 @@ class Git(
         addFilesToIndex(files)
         createCommit(version, ticket)
         "git push origin $name".execute()
-        "git remote set-head origin $name".execute()
+        "git remote set-head origin -a".execute()
         createPullRequest(version, ticket, labels)
         "git checkout master".execute()
     }
