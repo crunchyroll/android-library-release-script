@@ -288,7 +288,6 @@ class Git(
         "git push origin $name".execute()
         "git remote set-head origin -a".execute()
         createPullRequest(version, ticket, labels)
-        "git checkout master".execute()
     }
 
     private fun createCommit(version: String, ticket: String) {
