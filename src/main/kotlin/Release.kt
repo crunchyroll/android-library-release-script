@@ -287,7 +287,6 @@ class Git(
         createCommit(version, ticket)
         "git push origin $name".execute()
         createPullRequest(version, ticket, labels)
-        "git checkout master".execute()
     }
 
     private fun createCommit(version: String, ticket: String) {
